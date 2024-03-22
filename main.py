@@ -17,6 +17,9 @@ c.execute('''CREATE TABLE IF NOT EXISTS jobs
              (job_id TEXT PRIMARY KEY, status TEXT)''')
 conn.commit()
 
+# AWS SQS client
+sqs = boto3.client('sqs', region_name='your_region')
+
 # Sample function to process SQS message
 def process_sqs_message(message):
     # Process message here
@@ -24,10 +27,10 @@ def process_sqs_message(message):
     # Simulating processing time
     asyncio.sleep(5)
     # Delete message from SQS
-    # sqs.delete_message(
-    #     QueueUrl='your_queue_url',
-    #     ReceiptHandle=message['ReceiptHandle']
-    # )
+    sqs.delete_message(
+        QueueUrl='your_queue_url',
+        ReceiptHandle=message['ReceiptHandle']
+    )
     print("Message deleted from SQS:", message)
 
 # Background task to pull messages from SQS
