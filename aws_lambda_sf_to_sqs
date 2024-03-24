@@ -1,0 +1,47 @@
+import snowflake.connector
+import boto3
+
+def lambda_handler(event, context):
+    # Connect to Snowflake
+    conn = snowflake.connector.connect(
+        user='your_username',
+        password='your_password',
+        account='your_account',
+        warehouse='your_warehouse',
+        database='your_database',
+        schema='your_schema'
+    )
+
+    # Execute query to retrieve data from Snowflake
+    cursor = conn.cursor()
+    cursor.execute("SELECT column1, column2, column3 FROM your_table")
+
+    # Initialize SQS client
+    sqs = boto3.client('sqs', region_name='your_region')
+
+    # Get the SQS queue URL
+    queue_url = 'your_queue_url'
+
+    # Iterate over the result set and send each record to SQS
+    for row in cursor.fetchall():
+        # Format the message to be sent to SQS
+        message_body = {
+            'column1': row[0],
+            'column2': row[1],
+            'column3': row[2]
+        }
+
+        # Send the message to SQS queue
+        sqs.send_message(
+            QueueUrl=queue_url,
+            MessageBody=json.dumps(message_body)
+        )
+
+    # Close Snowflake connection
+    cursor.close()
+    conn.close()
+
+    return {
+        'statusCode': 200,
+        'body': json.dumps('Data successfully extracted and sent to SQS queue')
+    }
